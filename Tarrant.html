@@ -19,25 +19,56 @@
   require([
       "esri/Map",
       "esri/views/MapView",
-      //"dojo/domReady!",
 	  "esri/layers/FeatureLayer",
+	  "dojo/domReady!",
     ], function(Map, MapView, FeatureLayer) {
 
     var map = new Map({
       basemap: "topo-vector"
     });
 	
+	var mde_parcels_renderer = {
+	type: "simple",
+	symbol: {
+		type: "simple-fill",
+		color: [115, 178, 115, 0.5],
+		outline: {
+			width: 0.5,
+			color: "white"
+			}
+		}
+	};
+	
+	var mde_buildings_renderer = {
+	type: "simple",
+	symbol: {
+		type: "simple-fill",
+		color: [100, 100, 100],
+		outline: {
+			width: 0,
+			color: "black"
+			}
+		}
+	};	
+	
 	var mde_parcels = new FeatureLayer({
-		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer"
+		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer",
+		renderer: mde_parcels_renderer
 	});
-  
-	map.add(mde_parcels);
+	
+	var mde_buildings = new FeatureLayer({
+		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/MDE_Building_Footprints/FeatureServer",
+		renderer: mde_buildings_renderer
+	});
+	
+	map.add(mde_parcels,0);
+	map.add(mde_buildings);
 	  
     var view = new MapView({
       container: "viewDiv",
       map: map,
       center: [-97.4200,32.687],
-      zoom: 16
+      zoom: 17
     });
 	
 });
