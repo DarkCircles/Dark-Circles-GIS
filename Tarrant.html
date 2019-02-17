@@ -27,6 +27,8 @@
       basemap: "topo-vector"
     });
 	
+	
+	//Layers
 	var mde_parcels_renderer = {
 	type: "simple",
 	symbol: {
@@ -51,9 +53,17 @@
 		}
 	};	
 	
+	//Popups and labeling
+	var mde_parcels_popup = {
+		title: "<b>Mont Del Estates</b>",
+		content: "<b>Name: </b>{Sheet1__Ow} <br> <b>Address: </b> {Sheet1___1} <br> <b>Year Built: </b> {Sheet1__Ye} <br> <b>TAD: </b><a href = https://www.tad.org/property/{Sheet1__Ac} target = _blank>Click Here</a> <br> <b>Document: </b> <a href = https://tcrecordsonline.com/?linklocation=supermenu&linkname=Real%20Estate%20Search#pdfviewer?ID={Sheet1__In} target = _blank>Click Here</a>",
+	}
+			
+	//Symbology
 	var mde_parcels = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer",
-		renderer: mde_parcels_renderer
+		renderer: mde_parcels_renderer,
+		popupTemplate: mde_parcels_popup
 	});
 	
 	var mde_buildings = new FeatureLayer({
@@ -61,9 +71,12 @@
 		renderer: mde_buildings_renderer
 	});
 	
+
+	//Add to map
 	map.add(mde_parcels,0);
-	map.add(mde_buildings);
-	  
+	map.add(mde_buildings,1);
+	 
+	//Map view
     var view = new MapView({
       container: "viewDiv",
       map: map,
