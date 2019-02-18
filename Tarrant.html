@@ -27,13 +27,12 @@
       basemap: "topo-vector"
     });
 	
-	
 	//Symbology renderers
 	var mde_parcels_renderer = {
 	type: "simple",
 	symbol: {
 		type: "simple-fill",
-		color: [115, 178, 115, 0.5],
+		color: [115, 178, 115, 0.75],
 		outline: {
 			width: 0.5,
 			color: "white"
@@ -64,7 +63,7 @@
 				}
 			}
 		};
-	
+
 	//Popup
 	var mde_parcels_popup = {
 		title: "<b>Mont Del Estates</b>",
@@ -72,7 +71,7 @@
 	}
 	
 	//Labels
-    const labelClass = {
+    const mde_areas_labels = {
       symbol: {
         type: "text",
         color: "blue",
@@ -84,12 +83,26 @@
           weight: "bold"
         }
       },
-      labelPlacement: "above-center",
+      labelPlacement: "center",
       labelExpressionInfo: {
         expression: "'Area ' + $feature.Area"
       }
     };
 
+	 const mde_buildings_labels = {
+      symbol: {
+        type: "text",
+        color: [200,200,200],
+        font: {
+          family: "sans-sarif",
+          size: 8,
+        }
+      },
+      labelPlacement: "center",
+      labelExpressionInfo: {
+        expression: "$feature.ADDNUM"
+      }
+    };
 	//Layers
 	var mde_parcels = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer",
@@ -99,20 +112,20 @@
 	
 	var mde_buildings = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/MDE_Building_Footprints/FeatureServer",
-		renderer: mde_buildings_renderer
+		renderer: mde_buildings_renderer,
+		labelingInfo: [mde_buildings_labels]
 	});
 	
 	var mde_areas = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Areas/FeatureServer",
 		renderer: mde_areas_renderer,
-		labelingInfo: [labelClass]
+		labelingInfo: [mde_areas_labels]
 	});
 
 	//Add to map
 	map.add(mde_parcels,0);
 	map.add(mde_buildings,1);
 	map.add(mde_areas,2);
-	 
 
 	//Map view
     var view = new MapView({
@@ -121,7 +134,6 @@
       center: [-97.4200,32.687],
       zoom: 17
     });
-
 
 	//Bottom riht coordinates widget
     var coordsWidget = document.createElement("div");
