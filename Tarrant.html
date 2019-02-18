@@ -15,7 +15,7 @@
 	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
 <script src="https://js.arcgis.com/4.10/"></script>
 	
-	<script>
+<script>
   require([
       "esri/Map",
       "esri/views/MapView",
@@ -28,7 +28,7 @@
     });
 	
 	
-	//Layers
+	//Symbology renderers
 	var mde_parcels_renderer = {
 	type: "simple",
 	symbol: {
@@ -53,13 +53,44 @@
 		}
 	};	
 	
-	//Popups and labeling
+	var mde_areas_renderer = {
+		type: "simple",
+		symbol: {
+			type: "simple-fill",
+			color: [0,0,0,0],
+			outline: {
+				width: 2,
+				color: "blue"
+				}
+			}
+		};
+	
+	//Popup
 	var mde_parcels_popup = {
 		title: "<b>Mont Del Estates</b>",
 		content: "<b>Name: </b>{Sheet1__Ow} <br> <b>Address: </b> {Sheet1___1} <br> <b>Year Built: </b> {Sheet1__Ye} <br> <b>TAD: </b><a href = https://www.tad.org/property/{Sheet1__Ac} target = _blank>Click Here</a> <br> <b>Document: </b> <a href = https://tcrecordsonline.com/?linklocation=supermenu&linkname=Real%20Estate%20Search#pdfviewer?ID={Sheet1__In} target = _blank>Click Here</a>",
 	}
-			
-	//Symbology
+	
+	//Labels
+    const labelClass = {
+      symbol: {
+        type: "text",
+        color: "blue",
+        haloColor: "white",
+		halosize: "10px",
+        font: {
+          family: "sans-sarif",
+          size: 12,
+          weight: "bold"
+        }
+      },
+      labelPlacement: "above-center",
+      labelExpressionInfo: {
+        expression: "'Area ' + $feature.Area"
+      }
+    };
+
+	//Layers
 	var mde_parcels = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer",
 		renderer: mde_parcels_renderer,
@@ -71,11 +102,18 @@
 		renderer: mde_buildings_renderer
 	});
 	
+	var mde_areas = new FeatureLayer({
+		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Areas/FeatureServer",
+		renderer: mde_areas_renderer,
+		labelingInfo: [labelClass]
+	});
 
 	//Add to map
 	map.add(mde_parcels,0);
 	map.add(mde_buildings,1);
+	map.add(mde_areas,2);
 	 
+
 	//Map view
     var view = new MapView({
       container: "viewDiv",
@@ -83,20 +121,21 @@
       center: [-97.4200,32.687],
       zoom: 17
     });
-	
+
+
 	//Bottom riht coordinates widget
-    var cw = document.createElement("div");
-    cw.id = "cw";
-    cw.className = "esri-widget esri-component";
-    cw.style.padding = "7px 15px 5px";
-    view.ui.add(cw, "bottom-right");
+    var coordsWidget = document.createElement("div");
+    coordsWidget.id = "coordsWidget";
+    coordsWidget.className = "esri-widget esri-component";
+    coordsWidget.style.padding = "7px 15px 5px";
+    view.ui.add(coordsWidget, "bottom-right");
 
     //*** Update lat, lon, zoom and scale ***//
     function showCoordinates(pt) {
       var coords = "Lat/Lon " + pt.latitude.toFixed(3) + " " + pt.longitude.toFixed(3) + 
           " | Scale 1:" + Math.round(view.scale * 1) / 1 +
           " | Zoom " + view.zoom;
-      cw.innerHTML = coords;
+      coordsWidget.innerHTML = coords;
     }
     
     //*** Add event and show center coordinates after the view is finished moving e.g. zoom, pan ***//
