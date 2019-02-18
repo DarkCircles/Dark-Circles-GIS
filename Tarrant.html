@@ -12,7 +12,7 @@
       width: 100%;
     }
 </style>
-	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
+	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/themes/dark/main.css">
 <script src="https://js.arcgis.com/4.10/"></script>
 	
 <script>
@@ -20,8 +20,10 @@
       "esri/Map",
       "esri/views/MapView",
 	  "esri/layers/FeatureLayer",
-	  "dojo/domReady!",
-    ], function(Map, MapView, FeatureLayer) {
+	  "esri/widgets/Search",
+	  "esri/widgets/LayerList",
+	  //"dojo/domReady!",
+    ], function(Map, MapView, FeatureLayer, Search, LayerList) {
 
     var map = new Map({
       basemap: "topo-vector"
@@ -36,8 +38,8 @@
 		outline: {
 			width: 0.5,
 			color: "white"
-			}
 		}
+	}
 	};
 	
 	var mde_buildings_renderer = {
@@ -48,8 +50,8 @@
 		outline: {
 			width: 0,
 			color: "black"
-			}
 		}
+	}
 	};	
 	
 	var mde_areas_renderer = {
@@ -60,9 +62,9 @@
 			outline: {
 				width: 2,
 				color: "blue"
-				}
 			}
-		};
+		}
+	};
 
 	//Popup
 	var mde_parcels_popup = {
@@ -82,14 +84,14 @@
           size: 12,
           weight: "bold"
         }
-      },
+		},
       labelPlacement: "center",
       labelExpressionInfo: {
         expression: "'Area ' + $feature.Area"
-      }
+		}
     };
 
-	 const mde_buildings_labels = {
+	const mde_buildings_labels = {
       symbol: {
         type: "text",
         color: [200,200,200],
@@ -103,6 +105,7 @@
         expression: "$feature.ADDNUM"
       }
     };
+	
 	//Layers
 	var mde_parcels = new FeatureLayer({
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Mont_Del_Estates/FeatureServer",
@@ -121,6 +124,10 @@
 		renderer: mde_areas_renderer,
 		labelingInfo: [mde_areas_labels]
 	});
+	
+	//mde_parcels featureLayer is limited in arcgis online
+	mde_parcels.maxScale = 0;
+	mde_parcels.minScale = 0;
 
 	//Add to map
 	map.add(mde_parcels,0);
@@ -135,13 +142,19 @@
       zoom: 17
     });
 
-	//Bottom riht coordinates widget
+	//Bottom right coordinates widget
     var coordsWidget = document.createElement("div");
     coordsWidget.id = "coordsWidget";
     coordsWidget.className = "esri-widget esri-component";
     coordsWidget.style.padding = "7px 15px 5px";
-    view.ui.add(coordsWidget, "bottom-right");
+    
+	//Widgets add to map
+	view.ui.add(coordsWidget, "bottom-right");
+	view.ui.add(new Search({
+		view: view
+	}), "top-right");
 
+	
     //*** Update lat, lon, zoom and scale ***//
     function showCoordinates(pt) {
       var coords = "Lat/Lon " + pt.latitude.toFixed(3) + " " + pt.longitude.toFixed(3) + 
@@ -159,6 +172,22 @@
     view.on(["pointer-down","pointer-move"], function(evt) {
       showCoordinates(view.toMap({ x: evt.x, y: evt.y }));
     });
+	
+	const layerList = new LayerList({
+		view: view,
+		listItemCreatedFunction: function(event) {
+			const item = event.item;
+			if (item.layer.type != "group") {
+				item.panel = {
+					content: "legend",
+					open: false
+				};
+			}
+		}
+	});
+	view.ui.add(layerList,"bottom-left");
+
+	
 });
 
 </script>
