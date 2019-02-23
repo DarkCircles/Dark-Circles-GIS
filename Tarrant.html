@@ -22,7 +22,6 @@
 	  "esri/layers/FeatureLayer",
 	  "esri/widgets/Search",
 	  "esri/widgets/LayerList",
-	  //"dojo/domReady!",
     ], function(Map, MapView, FeatureLayer, Search, LayerList) {
 
     var map = new Map({
@@ -80,12 +79,10 @@
         haloColor: "white",
 		halosize: "10px",
         font: {
-          family: "sans-sarif",
           size: 12,
           weight: "bold"
-        }
+			}
 		},
-      labelPlacement: "center",
       labelExpressionInfo: {
         expression: "'Area ' + $feature.Area"
 		}
@@ -96,11 +93,9 @@
         type: "text",
         color: [200,200,200],
         font: {
-          family: "sans-sarif",
           size: 8,
         }
       },
-      labelPlacement: "center",
       labelExpressionInfo: {
         expression: "$feature.ADDNUM"
       }
@@ -125,6 +120,11 @@
 		labelingInfo: [mde_areas_labels]
 	});
 	
+		var mde_pond = new FeatureLayer({
+		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Duck_Pond/FeatureServer",
+
+	});
+	
 	//mde_parcels featureLayer is limited in arcgis online
 	mde_parcels.maxScale = 0;
 	mde_parcels.minScale = 0;
@@ -133,6 +133,7 @@
 	map.add(mde_parcels,0);
 	map.add(mde_buildings,1);
 	map.add(mde_areas,2);
+	map.add(mde_pond,3);
 
 	//Map view
     var view = new MapView({
@@ -173,6 +174,7 @@
       showCoordinates(view.toMap({ x: evt.x, y: evt.y }));
     });
 	
+	//Legend
 	const layerList = new LayerList({
 		view: view,
 		listItemCreatedFunction: function(event) {
