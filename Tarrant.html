@@ -22,7 +22,10 @@
 	  "esri/layers/FeatureLayer",
 	  "esri/widgets/Search",
 	  "esri/widgets/LayerList",
-    ], function(Map, MapView, FeatureLayer, Search, LayerList) {
+	  "esri/layers/CSVLayer",
+	  "esri/widgets/BasemapToggle",
+	  "esri/widgets/Expand",
+    ], function(Map, MapView, FeatureLayer, Search, LayerList, CSVLayer, BasemapToggle, Expand) {
 
     var map = new Map({
       basemap: "topo-vector"
@@ -64,12 +67,98 @@
 			}
 		}
 	};
+	
+	var tarrant_wells_renderer = {
+		type: "unique-value",
+		field: "Symbol",
+		uniqueValueInfos: [{
+			value: 2,
+			label: "Permit",
+			symbol: {
+				type: "simple-marker",
+				style: "triangle",
+				size: 10,
+				color: "blue",
+				outline: {
+					width: 0.5,
+					color: "white"
+				}
+			}
+		}, {
+			value: 3,
+			label: "Dry Hole",
+			symbol: {
+				type: "simple-marker",
+				size: 8,
+				//color: "",
+				outline: {
+					width: 1,
+					color: "black"
+				}
+			}
+		}, {
+			value: 5,
+			label: "Gas Well",
+			symbol: {
+				type: "simple-marker",
+				size: 8,
+				color: "green",
+				outline: {
+					width: 0.5,
+					color: "white"
+				}
+			}
+		}, {
+			value: 9,
+			label: "Cancelled/Abandoned",
+			symbol: {
+				type: "simple-marker",
+				style: "x",
+				size: 8,
+				outline: {
+					width: 3,
+					color: "black"
+				}
+			}
+		}],
+	};
 
 	//Popup
 	var tarrant_parcels_popup = {
 		title: "<b>Tarrant County Parcels</b>",
 		content: "<b>Name: </b>{OWNER_NAME} <br> <b>Address: </b> {OWNER_ADDR} <br> <b>Year Built: </b>{YEAR_BUILT}<br> <b>Legal Description: </b> {LEGAL_1} <br> <b>TAD: </b><a href = https://www.tad.org/property/{ACCOUNT} target = _blank>Click Here</a> <br> <b>Document: </b> <a href = https://tcrecordsonline.com/?linklocation=supermenu&linkname=Real%20Estate%20Search#pdfviewer?ID={DEED_BOOK}{DEED_PAGE} target = _blank>Click Here</a>",
 	}
+	
+	var tarrant_wells_popup = {
+		title: "{Lease_Name} {Well_No}",
+		content: [{
+			type: "fields",
+			fieldInfos: [{
+				fieldName: "Operator",
+				label: "Operator",
+			}, {
+				fieldName: "API",
+				label: "API",
+			}, {
+				fieldName: "Well_Type",
+				label: "Status",
+			}, {
+				fieldName: "Proration_Schedule",
+				label: "Commodity",
+			}, {
+				fieldName: "Symbol_Desc",
+				label: "Well Type",
+			}, {
+				fieldName: "Total_Depth",
+				label: "Total Depth (ft}",
+				format: {
+					places: 0,
+					digitSeparator: true
+				}
+			}],
+		}],
+	}
+	
 	
 	//Labels
     const mde_areas_labels = {
@@ -120,9 +209,11 @@
 		labelingInfo: [mde_areas_labels]
 	});
 	
-		var mde_pond = new FeatureLayer({
-		url: "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/Building_Footprint/MapServer",
-
+	var tarrant_wells = new CSVLayer({
+		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells.csv",
+		title: "Select Tarrant Wells",
+		renderer: tarrant_wells_renderer,
+		popupTemplate: tarrant_wells_popup,
 	});
 	
 	//tarrant_parcels featureLayer is limited in arcgis online
@@ -130,9 +221,9 @@
 	tarrant_parcels.minScale = 0;
 
 	//Add to map
-	map.add(tarrant_parcels,0);
-	map.add(tarrant_buildings,1);
-	//map.add(mde_areas,2);
+	//map.add(tarrant_parcels,0);
+	//map.add(tarrant_buildings,1);
+	map.add(tarrant_wells,2);
 	//map.add(mde_pond,3);
 
 	//Map view
@@ -149,12 +240,18 @@
     coordsWidget.className = "esri-widget esri-component";
     coordsWidget.style.padding = "7px 15px 5px";
     
+	//Basemap toggle
+	var basemaptoggle = new BasemapToggle({
+		view: view,
+		nextBasemap: "hybrid"
+	});
+	
 	//Widgets add to map
 	view.ui.add(coordsWidget, "bottom-right");
 	view.ui.add(new Search({
 		view: view
 	}), "top-right");
-
+	view.ui.add(basemaptoggle, "top-right");
 	
     //*** Update lat, lon, zoom and scale ***//
     function showCoordinates(pt) {
@@ -187,7 +284,13 @@
 			}
 		}
 	});
-	view.ui.add(layerList,"bottom-left");
+	
+	const legendexpand = new Expand({
+		view: view,
+		content: layerList,
+	});
+	
+	view.ui.add(legendexpand,"bottom-left");
 
 	
 });
