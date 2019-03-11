@@ -128,7 +128,7 @@
 
 	});
 	
-	//Scale buildings feature
+	//Scale buildings feature, data source has this value pre-set, this undoes that
 	benbrook_buildings.maxScale = 0;
 	benbrook_buildings.minScale = 0;
 
@@ -151,13 +151,6 @@
     coordsWidget.id = "coordsWidget";
     coordsWidget.className = "esri-widget esri-component";
     coordsWidget.style.padding = "7px 15px 5px";
-    
-	//Widgets add to map
-	view.ui.add(coordsWidget, "bottom-right");
-	view.ui.add(new Search({
-		view: view
-	}), "top-right");
-
 	
     //*** Update lat, lon, zoom and scale ***//
     function showCoordinates(pt) {
@@ -190,9 +183,14 @@
 			}
 		}
 	});
+	
+	//create search
+	var search = new Search({
+		view: view,
+	});
 
 	//Legend expand button
-	const legendexpand = new Expand({
+	var legendexpand = new Expand({
 		view: view,
 		content: layerList,
 	});
@@ -203,11 +201,14 @@
 	});
 	
 	//basemap gallary expand button
-	const basemapexpand = new Expand({
+	var basemapexpand = new Expand({
 		view: view,
 		content: basemapgallary,
 	});
 	
+	//add widgets to map
+	view.ui.add(coordsWidget, "bottom-right");
+	view.ui.add(search, "top-right");
 	view.ui.add(basemapexpand, "top-left");
 	view.ui.add(legendexpand, "bottom-left");
 });
