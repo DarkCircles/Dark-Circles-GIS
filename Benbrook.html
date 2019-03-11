@@ -22,7 +22,9 @@
 	  "esri/layers/FeatureLayer",
 	  "esri/widgets/Search",
 	  "esri/widgets/LayerList",
-    ], function(Map, MapView, FeatureLayer, Search, LayerList) {
+	  "esri/widgets/Expand",
+	  "esri/widgets/BasemapGallery",
+    ], function(Map, MapView, FeatureLayer, Search, LayerList, Expand, BasemapGallery) {
 
     var map = new Map({
       basemap: "topo-vector"
@@ -188,9 +190,26 @@
 			}
 		}
 	});
-	view.ui.add(layerList,"bottom-left");
 
+	//Legend expand button
+	const legendexpand = new Expand({
+		view: view,
+		content: layerList,
+	});
 	
+	//create basemap gallery
+	var basemapgallary = new BasemapGallery({
+		view: view
+	});
+	
+	//basemap gallary expand button
+	const basemapexpand = new Expand({
+		view: view,
+		content: basemapgallary,
+	});
+	
+	view.ui.add(basemapexpand, "top-left");
+	view.ui.add(legendexpand, "bottom-left");
 });
 
 </script>
