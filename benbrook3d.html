@@ -1,0 +1,101 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Benbrook 3D Scene</title>
+<style>
+  html, body, #viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+  }
+</style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
+<script src="https://js.arcgis.com/4.10/"></script>
+  
+  <script>
+require([
+  "esri/Map",
+  "esri/views/SceneView",
+  "esri/layers/FeatureLayer"
+], function(Map, SceneView, FeatureLayer) {
+  
+	var map = new Map({
+		basemap: "topo"
+	});
+
+  	//Symbology renderers
+	var benbrook_parcels_renderer = {
+	type: "simple",
+	symbol: {
+		type: "simple-fill",
+		color: [115, 178, 115, 0.75],
+		outline: {
+			width: 0.5,
+			color: "white"
+		}
+	}
+	};
+ 
+	var building_symbol = {
+		type: "polygon-3d",
+		symbolLayers: [{
+			type: "extrude",
+			size: 10,
+			material: {color:
+				[100, 100, 100]
+			},
+			edges: {
+				type: "solid",
+				color: "black",
+				size: 1
+			}
+		}]
+	};
+ 
+ 	var benbrook_buildings_renderer = {
+	type: "simple",
+	symbol: building_symbol
+	};	
+	
+	
+	// feature layers
+	var benbrook_buildings = new FeatureLayer({
+		url: "https://services2.arcgis.com/47zpaxPs74cHOzU1/arcgis/rest/services/BuildingFootprints1/FeatureServer",
+		renderer: benbrook_buildings_renderer,
+		title: "Building Footprints"
+	});
+	
+	var benbrook_parcels = new FeatureLayer({
+		url: "https://services2.arcgis.com/47zpaxPs74cHOzU1/arcgis/rest/services/PlatsParcels/FeatureServer",
+		renderer: benbrook_parcels_renderer,
+		//popupTemplate: benbrook_parcels_popup,
+		title: "Parcels"
+	});
+	
+	map.add(benbrook_parcels,0);
+	map.add(benbrook_buildings,1);
+		benbrook_buildings.maxScale = 0;
+		benbrook_buildings.minScale = 0;
+
+	
+	var view = new SceneView({
+		container: "viewDiv",  
+		map: map
+	});
+  
+	view.when(function(){
+		view.goTo({
+			center: [-97.420, 32.688],
+		zoom: 18,
+		tilt: 45
+		})
+	});
+
+});</script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html> 
