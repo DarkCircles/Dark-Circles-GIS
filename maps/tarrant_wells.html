@@ -14,12 +14,27 @@
       width: 100%;
     }
 	#infoDiv {
-	  background-color: white;
-	  color: black;
+	  background-color: black;
+	  color: white;
 	  padding: 0;
-	  height: 0px;
-	  width: 100px;
+	  height: 275px;
+	  width: 200px;
 	  }
+
+	button {
+		background: black;
+		padding: 5px;
+		border: 1px solid darkgray;
+		font-size: 1em;
+		margin: 5px;
+		color: darkgray;
+	}
+
+	button:hover {
+		background: whitesmoke;
+		color: black;
+		cursor:pointer;
+	}
 		
 </style>
 	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/themes/dark/main.css">
@@ -27,17 +42,16 @@
 	
 <script>
   require([
-      "esri/Map",
-      "esri/views/MapView",
+    "esri/Map",
+    "esri/views/MapView",
 	  "esri/layers/FeatureLayer",
 	  "esri/widgets/Search",
 	  "esri/widgets/LayerList",
 	  "esri/layers/CSVLayer",
 	  "esri/widgets/BasemapToggle",
 	  "esri/widgets/Expand",
-	  "esri/Graphic",
 	  "esri/layers/GeoJSONLayer"
-    ], function(Map, MapView, FeatureLayer, Search, LayerList, CSVLayer, BasemapToggle, Expand, Graphic, GeoJSONLayer) {
+    ], function(Map, MapView, FeatureLayer, Search, LayerList, CSVLayer, BasemapToggle, Expand, GeoJSONLayer) {
 
     var map = new Map({
       basemap: "topo-vector"
@@ -126,6 +140,16 @@
 		}
 	};
 
+    var wellbores_renderer = {
+        type: "simple",
+            symbol: {
+                type: "simple-line",
+                width: 0.25,
+                color: "black",
+            }
+    }
+
+
 	//Labels
 	var mde_areas_labels = {
     	symbol: {
@@ -208,7 +232,7 @@
 	//Layers
 	var tarrant_wells = new CSVLayer({
 		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells.csv",
-		title: "Select Tarrant Wells",
+		title: "Select Tarrant Wells (CSV)",
 		renderer: tarrant_wells_renderer,
 		popupTemplate: tarrant_wells_popup,
 		labelingInfo: [well_label],
@@ -216,21 +240,22 @@
 	
 	var Fort_Worth = new FeatureLayer({
 		url: "https://gis.dfwmaps.com/arcgis/rest/services/rdc/rdc_Boundaries/MapServer/6",
-		title: "Fort Worth",
+		title: "Fort Worth (Feature Service)",
 		definitionExpression: "CITY = 'Fort Worth'",
 		labelingInfo: [fwlabel]
 	});
 
 	var mde_areas = new GeoJSONLayer({
 		url: "https://raw.githubusercontent.com/hadley96d/Dark-Circles-GIS/master/json/mde_areas.GeoJson",
-		title: "MDE Areas",
+		title: "MDE Areas (GeoJSON)",
 		renderer: mde_areas_renderer,
 		labelingInfo: [mde_areas_labels],
 	})
 
 	var wellbores = new GeoJSONLayer({
 		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells_geojson.json",
-		title: "Wellbores"
+		title: "Wellbores (GeoJSON)",
+        renderer: wellbores_renderer
 	})
 
 	//Add to map
@@ -239,17 +264,22 @@
 	map.add(Fort_Worth,2);
 	map.add(tarrant_wells,3);
 	
+
 	//Map view
+	mapx = 32.754;
+	mapy = -97.332;
+	mapzoom = 11;
+
     var view = new MapView({
       container: "viewDiv",
       map: map,
-      center: [-97.332, 32.754],
-      zoom: 11
+      center: [mapy, mapx],
+      zoom: mapzoom,
     });
 
 
 
-    //Widgets
+  //Widgets
 	//Bottom right coordinates widget
     var coordsWidget = document.createElement("div");
     coordsWidget.id = "coordsWidget";
@@ -298,6 +328,11 @@
 		view: view,
 		content: layerList,
 	});
+
+	const controlexpand = new Expand({
+		view: view,
+		content: infoDiv,
+	});
 	
 
 	//General Search and Well API Search
@@ -324,8 +359,71 @@
 	view.ui.add(basemaptoggle, "top-left");
 	view.ui.add(legendexpand,"bottom-left");
 	view.ui.add("infoDiv", "top-right");
+	view.ui.add(controlexpand, "top-right");
 
-	//.addEventListener("click", alert("hello"));
+
+//Button actions
+
+
+//Zoom to Fort Worth extent
+document
+		.getElementById("fort_worth_extent")
+		.addEventListener("click", function(){
+			;Fort_Worth
+				.when(function(){
+			return Fort_Worth.queryExtent();
+			})
+				.then(function(response){
+			view.goTo(response.extent);
+	});
+		});
+
+//Zoom to lat long downtown fort worth
+	document
+		.getElementById("fort_worth_dt_extent")
+		.addEventListener("click", function(){
+			mapy = -97.331;
+			mapx = 32.7564;
+			mapzoom = 16;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+//Zoom to lat long mont del estates
+document
+		.getElementById("mde_extent")
+		.addEventListener("click", function(){
+			mapy = -97.420;
+			mapx = 32.687;
+			mapzoom = 17;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+//Zoom to lat long permitting activity
+document
+		.getElementById("permitting_extent")
+		.addEventListener("click", function(){
+			mapy = -97.359;
+			mapx = 32.692;
+			mapzoom = 16;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+
+//zoom to wells extent
+document
+		.getElementById("well_extent")
+		.addEventListener("click", function(){
+			tarrant_wells
+				.when(function(){
+			return tarrant_wells.queryExtent();
+			})
+				.then(function(response){
+			view.goTo(response.extent);
+	});
+		});
 
 });
 
@@ -334,7 +432,14 @@
 <body>
 	<div id="viewDiv"></div>
 	<div id="infoDiv">
-		<button id="button">broken</button>
+	</br>
+		<center><font size="4" color="white">Places of Interest</font></center>
+	</br>
+		<center><button id="fort_worth_extent">Fort Worth City Limit</button></center>
+		<center><button id="well_extent">Select Wells Extent</button></center>
+		<center><button id="permitting_extent">Permitting Activity</button></center>
+		<center><button id="fort_worth_dt_extent">Downtown Fort Worth</button></center>
+		<center><button id="mde_extent">Mont Del Estates</button></center>
 	</div>
 </body>
 </html>
