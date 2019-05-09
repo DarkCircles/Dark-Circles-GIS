@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Texas Gas Wells</title>
+<style>
+    html,
+	body,
+	#viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 90%;
+      width: 100%;
+    }
+	#infoDiv {
+	  background-color: black;
+	  color: white;
+	  padding: 0;
+	  height: 275px;
+	  width: 200px;
+	  }
+
+	#attributeDiv{
+		background-color: lightgray;
+		overflow:scroll;
+		border: 2;
+		padding: 0;
+		margin: 0;
+		height: 300px;
+		width: 100%;
+	}
+
+	button {
+		background: black;
+		padding: 5px;
+		border: 1px solid darkgray;
+		font-size: 1em;
+		margin: 5px;
+		color: darkgray;
+	}
+
+	button:hover {
+		background: whitesmoke;
+		color: black;
+		cursor:pointer;
+	}
+
+</style>
+	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/themes/dark/main.css">
+<script src="https://js.arcgis.com/4.11/"></script>
+	
+<script>
+  require([
+    "esri/Map",
+    "esri/views/MapView",
+	  "esri/layers/FeatureLayer",
+	  "esri/widgets/Search",
+	  "esri/widgets/LayerList",
+	  "esri/layers/CSVLayer",
+	  "esri/widgets/BasemapToggle",
+	  "esri/widgets/Expand",
+	  "esri/layers/GeoJSONLayer",
+		"esri/request",
+    ], function(Map, MapView, FeatureLayer, Search, LayerList, CSVLayer, BasemapToggle, Expand, GeoJSONLayer, esriRequest) {
+
+    var map = new Map({
+      basemap: "topo-vector"
+    });
+	
+	//var press = document.getElementByID("button");
+	
+	//Symbology renderers
+	var tarrant_wells_renderer = {
+		type: "unique-value",
+		field: "Symbol",
+		uniqueValueInfos: [{
+			value: 2,
+			label: "Permit",
+			symbol: {
+				type: "simple-marker",
+				style: "triangle",
+				size: 10,
+				color: "blue",
+				outline: {
+					width: 0.5,
+					color: "white"
+				}
+			}
+		}, {
+			value: 3,
+			label: "Dry Hole",
+			symbol: {
+				type: "simple-marker",
+				size: 8,
+				//color: "",
+				outline: {
+					width: 1,
+					color: "black"
+				}
+			}
+		}, {
+			value: 5,
+			label: "Gas Well",
+			symbol: {
+				type: "simple-marker",
+				size: 8,
+				color: "green",
+				outline: {
+					width: 0.5,
+					color: "white"
+				}
+			}
+		}, {
+			value: 9,
+			label: "Cancelled/Abandoned",
+			symbol: {
+				type: "simple-marker",
+				style: "x",
+				size: 8,
+				outline: {
+					width: 3,
+					color: "black"
+				}
+			}
+		}, {
+			value: 86,
+			label: "Horizontal Surface",
+			symbol: {
+				type: "simple-marker",
+				style: "square",
+				size: 8,
+				color:[255, 255, 255, 0],
+				outline: {
+					width: 1,
+					color: "black"
+				}
+			}
+		}],
+	};
+
+	var mde_areas_renderer = {
+		type: "simple",
+		symbol: {
+			type: "simple-fill",
+			color: [0,0,0,0],
+			outline: {
+				width: 2,
+				color: "blue"
+			}
+		}
+	};
+
+    var wellbores_renderer = {
+        type: "simple",
+            symbol: {
+                type: "simple-line",
+                width: 0.25,
+                color: "black",
+            }
+    }
+
+
+	//Labels
+	var mde_areas_labels = {
+    	symbol: {
+        	type: "text",
+        	color: "blue",
+        	haloColor: "white",
+			halosize: "10px",
+       			font: {
+          			size: 12,
+          			weight: "bold"
+				}
+			},
+
+      	labelExpressionInfo: {
+        	expression: "Area"
+		}
+    };
+
+    var well_label = {
+    	symbol: {
+    		type: "text",
+    		color: "black",
+    			font: {
+    				size: 12,
+    				weight: "bold",
+    			}
+		},
+    	
+
+    	labelExpressionInfo: {
+    		expression: "[API]"
+    	},
+    	labelPlacement: "center-right",
+    };
+
+    var fwlabel = {
+        symbol: {
+    	type: "text",
+    	color: "black",
+    		font: {
+    			size: 12,
+    			weight: "bold",
+    		}
+		},
+    	labelExpression: "[CITY]"
+    };
+
+	//Popup
+	var tarrant_wells_popup = {
+		title: "{Lease_Name} {Well_No}",
+		content: [{
+			type: "fields",
+			fieldInfos: [{
+				fieldName: "Operator",
+				label: "Operator",
+			}, {
+				fieldName: "API",
+				label: "API",
+			}, {
+				fieldName: "Well_Type",
+				label: "Status",
+			}, {
+				fieldName: "Proration_Schedule",
+				label: "Commodity",
+			}, {
+				fieldName: "Symbol_Desc",
+				label: "Well Type",
+			}, {
+				fieldName: "Total_Depth",
+				label: "Total Depth (ft}",
+				format: {
+					places: 0,
+					digitSeparator: true
+				}
+			}],
+		}],
+	}
+	
+
+	//Layers
+	var tarrant_wells = new CSVLayer({
+		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells.csv",
+		title: "Select Tarrant Wells (CSV)",
+		renderer: tarrant_wells_renderer,
+		popupTemplate: tarrant_wells_popup,
+		labelingInfo: [well_label],
+	});
+	
+	var Fort_Worth = new FeatureLayer({
+		url: "https://gis.dfwmaps.com/arcgis/rest/services/rdc/rdc_Boundaries/MapServer/6",
+		title: "Fort Worth (Feature Service)",
+		definitionExpression: "CITY = 'Fort Worth'",
+		labelingInfo: [fwlabel]
+	});
+
+	var mde_areas = new GeoJSONLayer({
+		url: "https://raw.githubusercontent.com/hadley96d/Dark-Circles-GIS/master/json/mde_areas.GeoJson",
+		title: "MDE Areas (GeoJSON)",
+		renderer: mde_areas_renderer,
+		labelingInfo: [mde_areas_labels],
+	})
+
+	var wellbores = new GeoJSONLayer({
+		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells_geojson.json",
+		title: "Wellbores (GeoJSON)",
+        renderer: wellbores_renderer
+	})
+
+	var gas_wells = new FeatureLayer({
+	url: "https://services1.arcgis.com/qr14biwnHA6Vis6l/arcgis/rest/services/eocpcGas12/FeatureServer/0",
+	title: "Texas Gas Wells (Surface)",
+	})
+
+
+	//Add to map
+	map.add(mde_areas,0);
+	//map.add(wellbores,1);
+	map.add(Fort_Worth,2);
+	//map.add(tarrant_wells,3);
+	map.add(gas_wells,4);
+	
+
+	//Map view
+	mapx = 32.754;
+	mapy = -97.332;
+	mapzoom = 11;
+
+    var view = new MapView({
+      container: "viewDiv",
+      map: map,
+      center: [mapy, mapx],
+      zoom: mapzoom,
+    });
+
+
+
+  //Widgets
+	//Bottom right coordinates widget
+    var coordsWidget = document.createElement("div");
+    coordsWidget.id = "coordsWidget";
+    coordsWidget.className = "esri-widget esri-component";
+    coordsWidget.style.padding = "7px 15px 5px";
+    
+	//Basemap toggle
+	var basemaptoggle = new BasemapToggle({
+		view: view,
+		nextBasemap: "hybrid"
+	});
+	
+    //*** Update lat, lon, zoom and scale ***//
+    function showCoordinates(pt) {
+      var coords = "Lat/Lon " + pt.latitude.toFixed(3) + " " + pt.longitude.toFixed(3) + 
+          " | Scale 1:" + Math.round(view.scale * 1) / 1 +
+          " | Zoom " + view.zoom;
+      coordsWidget.innerHTML = coords;
+    }
+    
+    //*** Add event and show center coordinates after the view is finished moving e.g. zoom, pan ***//
+    view.watch(["stationary"], function() {
+      showCoordinates(view.center);
+    });
+
+    //*** Add event to show mouse coordinates on click and move ***//
+    view.on(["pointer-down","pointer-move"], function(evt) {
+      showCoordinates(view.toMap({ x: evt.x, y: evt.y }));
+    });
+	
+	//Legend
+	const layerList = new LayerList({
+		view: view,
+		listItemCreatedFunction: function(event) {
+			const item = event.item;
+			if (item.layer.type != "group") {
+				item.panel = {
+					content: "legend",
+					open: true
+				};
+			}
+		}
+	});
+	
+	const legendexpand = new Expand({
+		view: view,
+		content: layerList,
+	});
+
+	const controlexpand = new Expand({
+		view: view,
+		content: infoDiv,
+	});
+	
+
+	//General Search and Well API Search
+	var search = new Search({
+		view: view,
+		allPlaceholder: "Select Search",
+		sources: [{
+			layer: tarrant_wells,
+			searchFields: ["API"],
+			displayField: "Lease_Name",
+			exactMatch: false,
+			name: "API Search",
+			placeholder: "API Number",
+			zoom: 11,
+			outFields: ["*"]
+			}
+		]
+
+	});
+
+	//Widgets add to map
+	view.ui.add(coordsWidget, "bottom-right");
+	view.ui.add(search, "top-right");
+	view.ui.add(basemaptoggle, "top-left");
+	view.ui.add(legendexpand,"bottom-left");
+	view.ui.add("infoDiv", "top-right");
+	view.ui.add(controlexpand, "top-right");
+
+
+//Button actions
+
+
+//Zoom to Fort Worth extent
+document
+		.getElementById("fort_worth_extent")
+		.addEventListener("click", function(){
+			;Fort_Worth
+				.when(function(){
+			return Fort_Worth.queryExtent();
+			})
+				.then(function(response){
+			view.goTo(response.extent);
+	});
+		});
+
+//Zoom to lat long downtown fort worth
+	document
+		.getElementById("fort_worth_dt_extent")
+		.addEventListener("click", function(){
+			mapy = -97.331;
+			mapx = 32.7564;
+			mapzoom = 16;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+//Zoom to lat long mont del estates
+document
+		.getElementById("mde_extent")
+		.addEventListener("click", function(){
+			mapy = -97.420;
+			mapx = 32.687;
+			mapzoom = 17;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+//Zoom to lat long permitting activity
+document
+		.getElementById("permitting_extent")
+		.addEventListener("click", function(){
+			mapy = -97.359;
+			mapx = 32.692;
+			mapzoom = 16;
+			view.zoom = mapzoom;
+			view.goTo([mapy, mapx]);
+		});
+
+
+//zoom to wells extent
+document
+		.getElementById("well_extent")
+		.addEventListener("click", function(){
+			tarrant_wells
+				.when(function(){
+			return tarrant_wells.queryExtent();
+			})
+				.then(function(response){
+			view.goTo(response.extent);
+	});
+		});
+
+
+//Attribute table
+
+document
+		.getElementById("attributes_button")
+		.addEventListener("click", function(){
+			populateAttributesTable();
+		});
+
+function populateAttributesTable(){
+
+	let queryurl = "https://services1.arcgis.com/qr14biwnHA6Vis6l/arcgis/rest/services/eocpcGas12/FeatureServer/0/query";
+	let attributetable = document.getElementById("attributeDiv");
+	attributetable.innerHTML = "";
+	let queryOptions = {
+		responseType: "json",
+		query: {
+			f: "json",
+			where: "1=1",
+			outFields: "*",
+			resultRecordCount: "100"
+
+		}
+	}
+
+	esriRequest(queryurl,queryOptions).then (response =>{
+		//alert(response.data.fields.length);
+		let  table = document.createElement("table");
+		table.border = 2;
+		let header = document.createElement("tr");
+		table.appendChild(header);
+
+		//populate column headers
+		for (let i = 0; i < response.data.fields.length; i++){
+				let column = document.createElement("th");
+				column.textContent = response.data.fields[i].alias;
+				header.appendChild(column);
+		}
+
+		//populate rows
+		for (let j = 0; j < response.data.features.length; j++){
+			let feature = response.data.features[j];
+			let row = document.createElement("tr");
+			table.appendChild(row);
+
+			for (let i = 0; i < response.data.fields.length; i++){
+				let field = response.data.fields[i];
+				let column = document.createElement("td");
+				column.textContent = feature.attributes[field.name];
+				row.appendChild(column);
+			}
+		}
+		attributetable.appendChild(table);
+
+	});
+}
+
+
+});
+
+</script>
+</head>
+<body>
+	<div id="viewDiv"></div>
+	<div id="attributeDiv">
+		<button id = "attributes_button">Attribute Table</button>
+		<table>
+		</table>
+	</div>
+	<div id="infoDiv">
+	</br>
+		<center><font size="4" color="white">Places of Interest</font></center>
+	</br>
+		<center><button id="fort_worth_extent">Fort Worth City Limit</button></center>
+		<center><button id="well_extent">Select Wells Extent</button></center>
+		<center><button id="permitting_extent">Permitting Activity</button></center>
+		<center><button id="fort_worth_dt_extent">Downtown Fort Worth</button></center>
+		<center><button id="mde_extent">Mont Del Estates</button></center>
+	</div>
+</body>
+</html>
