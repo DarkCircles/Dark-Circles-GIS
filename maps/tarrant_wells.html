@@ -469,7 +469,7 @@ function populateAttributesTable(){
 		table.appendChild(header);
 
 		//populate column headers
-		for (let i = 0; i < response.data.fields.length; i++){
+		for (let i = 0; i < response.data.fields.length - 2; i++){
 				let column = document.createElement("th");
 				column.textContent = response.data.fields[i].alias;
 				header.appendChild(column);
@@ -481,7 +481,7 @@ function populateAttributesTable(){
 			let row = document.createElement("tr");
 			table.appendChild(row);
 
-			for (let i = 0; i < response.data.fields.length; i++){
+			for (let i = 0; i < response.data.fields.length - 2; i++){
 				let field = response.data.fields[i];
 				let column = document.createElement("td");
 				column.textContent = feature.attributes[field.name];
