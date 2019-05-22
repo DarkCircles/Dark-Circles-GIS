@@ -1,1 +1,1 @@
-Web map JavaScript project and GitHub pages project.
+ArcGIS API for JavaScript project and GitHub pages.
