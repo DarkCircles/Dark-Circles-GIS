@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -10,7 +14,7 @@
 	#viewDiv {
       padding: 0;
       margin: 0;
-      height: 90%;
+      height: 100%;
       width: 100%;
     }
 	#infoDiv {
@@ -22,13 +26,13 @@
 	  }
 
 	#attributeDiv{
-		background-color: lightgray;
-		overflow:scroll;
+		border-color: black;
+		background-color: white;
+		overflow: scroll;
 		border: 2;
-		padding: 0;
-		margin: 0;
+		padding: 2;
+		margin: 2;
 		height: 300px;
-		width: 100%;
 	}
 
 	button {
@@ -47,7 +51,7 @@
 	}
 
 </style>
-	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/themes/dark/main.css">
+	<link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/themes/dark/main.css">
 <script src="https://js.arcgis.com/4.11/"></script>
 	
 <script>
@@ -61,15 +65,20 @@
 	  "esri/widgets/BasemapToggle",
 	  "esri/widgets/Expand",
 	  "esri/layers/GeoJSONLayer",
-		"esri/request",
-    ], function(Map, MapView, FeatureLayer, Search, LayerList, CSVLayer, BasemapToggle, Expand, GeoJSONLayer, esriRequest) {
+	  "esri/request",
+	  "esri/tasks/support/Query",
+	  "esri/layers/GraphicsLayer",
+	  "esri/geometry/geometryEngine",
+	  "esri/Graphic",
+	  "esri/views/layers/FeatureLayerView",
+	  ], function(Map, MapView, FeatureLayer, Search, LayerList, 
+	  CSVLayer, BasemapToggle, Expand, GeoJSONLayer, esriRequest, 
+	  Query,GraphicsLayer, geometryEngine, Graphic, FeatureLayerView) {
 
     var map = new Map({
-      basemap: "topo-vector"
+			basemap: "topo-vector",
     });
-	
-	//var press = document.getElementByID("button");
-	
+
 	//Symbology renderers
 	var tarrant_wells_renderer = {
 		type: "unique-value",
@@ -247,6 +256,7 @@
 		renderer: tarrant_wells_renderer,
 		popupTemplate: tarrant_wells_popup,
 		labelingInfo: [well_label],
+		visible: true
 	});
 	
 	var Fort_Worth = new FeatureLayer({
@@ -261,12 +271,14 @@
 		title: "MDE Areas (GeoJSON)",
 		renderer: mde_areas_renderer,
 		labelingInfo: [mde_areas_labels],
+		visible: true
 	})
 
 	var wellbores = new GeoJSONLayer({
 		url: "https://www.darkcirclesgis.com/points/select_tarrant_wells_geojson.json",
 		title: "Wellbores (GeoJSON)",
-        renderer: wellbores_renderer
+		renderer: wellbores_renderer,
+		visible: true
 	})
 
 	//Add to map
@@ -276,10 +288,12 @@
 	map.add(tarrant_wells,3);
 	
 
+
+
 	//Map view
-	mapx = 32.754;
-	mapy = -97.332;
-	mapzoom = 11;
+	var mapx = 32.754;
+	var mapy = -97.332;
+	var mapzoom = 11;
 
     var view = new MapView({
       container: "viewDiv",
@@ -287,8 +301,6 @@
       center: [mapy, mapx],
       zoom: mapzoom,
     });
-
-
 
   //Widgets
 	//Bottom right coordinates widget
@@ -344,7 +356,11 @@
 		view: view,
 		content: infoDiv,
 	});
-	
+
+	const attributeExpand = new Expand({
+		view: view,
+		content: attributeDiv,
+	});	
 
 	//General Search and Well API Search
 	var search = new Search({
@@ -371,7 +387,7 @@
 	view.ui.add(legendexpand,"bottom-left");
 	view.ui.add("infoDiv", "top-right");
 	view.ui.add(controlexpand, "top-right");
-
+	view.ui.add(attributeExpand, "bottom-leading");
 
 //Button actions
 
@@ -439,11 +455,13 @@ document
 
 //Attribute table
 
-document
-		.getElementById("attributes_button")
-		.addEventListener("click", function(){
-			populateAttributesTable();
-		});
+//document
+//		.getElementById("attributes_button")
+//		.addEventListener("click", function(){
+//			populateAttributesTable();
+//		});
+
+populateAttributesTable();
 
 function populateAttributesTable(){
 
@@ -458,18 +476,21 @@ function populateAttributesTable(){
 			outFields: "*",
 			resultRecordCount: "*"
 
-		}
+		},
+
 	}
 
 	esriRequest(queryurl,queryOptions).then (response =>{
 		//alert(response.data.fields.length);
 		let  table = document.createElement("table");
+		table.classList.add("table-striped");
+		table.classList.add("table");
 		table.border = 2;
 		let header = document.createElement("tr");
 		table.appendChild(header);
 
 		//populate column headers
-		for (let i = 0; i < response.data.fields.length; i++){
+		for (let i = 0; i < response.data.fields.length - 2; i++){
 				let column = document.createElement("th");
 				column.textContent = response.data.fields[i].alias;
 				header.appendChild(column);
@@ -481,7 +502,7 @@ function populateAttributesTable(){
 			let row = document.createElement("tr");
 			table.appendChild(row);
 
-			for (let i = 0; i < response.data.fields.length; i++){
+			for (let i = 0; i < response.data.fields.length - 2; i++){
 				let field = response.data.fields[i];
 				let column = document.createElement("td");
 				column.textContent = feature.attributes[field.name];
@@ -493,6 +514,39 @@ function populateAttributesTable(){
 	});
 }
 
+console.log("start");
+
+var wquery = tarrant_wells.createQuery();
+wquery.where = "Well_Type = 'PRODUCING'";
+wquery.outFields = ["Well_Type"];
+returnGeometry = true;
+
+var gwells = tarrant_wells.queryFeatures(wquery).then(function(response){
+			console.log(response.features);
+		});
+
+
+var graphix = new Graphic({
+	geometry: {
+		type: "point",
+		longitude: view.center.longitude,
+		latitude: view.center.latitude,
+	},
+	symbol:{
+		type: "simple-marker",
+		color: "white",
+		size: 10,
+		outline: {
+			width: 1,
+			color: "black"
+		},
+	}
+});
+
+
+
+view.graphics.add(graphix);
+console.log("end");
 
 });
 
@@ -500,11 +554,7 @@ function populateAttributesTable(){
 </head>
 <body>
 	<div id="viewDiv"></div>
-	<div id="attributeDiv">
-		<button id = "attributes_button">Attribute Table</button>
-		<table>
-		</table>
-	</div>
+	<div id="attributeDiv"></div>
 	<div id="infoDiv">
 	</br>
 		<center><font size="4" color="white">Places of Interest</font></center>
