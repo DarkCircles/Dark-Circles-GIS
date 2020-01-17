@@ -281,11 +281,17 @@
 		visible: true
 	})
 
+	var sample_properties = new FeatureLayer({
+		url: "https://services5.arcgis.com/4YbKOxZifZQ9GU7r/arcgis/rest/services/Test_Features_Medium/FeatureServer",
+		outFields: ["*"]
+	})
+
 	//Add to map
 	map.add(mde_areas,0);
 	map.add(wellbores,1);
 	map.add(Fort_Worth,2);
 	map.add(tarrant_wells,3);
+	map.add(sample_properties,4);
 	
 
 
