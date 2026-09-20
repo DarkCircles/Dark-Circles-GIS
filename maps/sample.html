@@ -1,51 +1,61 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Locate component | Sample | ArcGIS Maps SDK for JavaScript</title>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
-    <script type="module" src="https://js.arcgis.com/5.1/">
-      import esriConfig from "https://js.arcgis.com/4.34/@arcgis/core/config.js";
-      import FeatureLayer from "https://js.arcgis.com/4.34/@arcgis/core/layers/FeatureLayer.js";
+  <title>ArcGIS Enterprise Portal Item</title>
 
-      // Your Enterprise Portal
-      esriConfig.portalUrl = "https://gis.174powerglobal.com/portal";
+  <script
+    type="module"
+    src="https://js.arcgis.com/map-components/4.34/arcgis-map-components.esm.js">
+  </script>
 
-      // Layer from Portal Item
-      const layer = new FeatureLayer({
-        portalItem: {
-          id: "8299766d102a4f1f80a6d61997b21039"
-        }
-      }); 
-      
-      await layer.load();
+  <style>
+    html,
+    body,
+    arcgis-map {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
 
-      const mapElement = document.getElementById("mapElement");
-      await mapElement.viewOnReady();
-  
-      mapElement.map.add(layer);
+<body>
+  <arcgis-map
+    id="mapElement"
+    basemap="topo-vector">
+    <arcgis-zoom slot="top-left"></arcgis-zoom>
+  </arcgis-map>
+
+  <script type="module">
+    import esriConfig from "https://js.arcgis.com/4.34/@arcgis/core/config.js";
+    import FeatureLayer from "https://js.arcgis.com/4.34/@arcgis/core/layers/FeatureLayer.js";
+
+    // Your Enterprise Portal
+    esriConfig.portalUrl = "https://gis.174powerglobal.com/portal";
+
+    // Layer from Portal Item
+    const layer = new FeatureLayer({
+      portalItem: {
+        id: "8299766d102a4f1f80a6d61997b21039"
+      }
+    });
+
+    await layer.load();
+
+    const mapElement = document.getElementById("mapElement");
+    await mapElement.viewOnReady();
+
+    mapElement.map.add(layer);
 
     if (layer.fullExtent) {
       mapElement.view.goTo(layer.fullExtent);
     }
-    
-    </script>
 
-    <style>
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
-    </style>
-  </head>
-
-  <body>
-    <arcgis-map basemap="topo-vector" center="-56.049, 38.485" zoom="3">
-      <arcgis-zoom slot="top-left"></arcgis-zoom>
-      <arcgis-locate slot="top-left"></arcgis-locate>
-    </arcgis-map>
-  </body>
+    console.log("Layer loaded:", layer.title);
+  </script>
+</body>
 </html>
