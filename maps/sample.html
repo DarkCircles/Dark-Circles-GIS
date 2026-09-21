@@ -26,6 +26,16 @@
         portalUrl: config.portalUrl
       });
       identityManager.registerOAuthInfos([oAuthInfo]);
+
+      //Basemap toggle
+	    var basemaptoggle = new BasemapToggle({
+	    	view: view,
+	    	nextBasemap: "hybrid"
+	    });
+
+	    view.ui.add(basemaptoggle, "top-left");      
+
+
     </script>
 
     <style>
