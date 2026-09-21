@@ -27,14 +27,6 @@
       });
       identityManager.registerOAuthInfos([oAuthInfo]);
 
-      //Basemap toggle
-	    var basemaptoggle = new BasemapToggle({
-	    	view: view,
-	    	nextBasemap: "hybrid"
-	    });
-
-	    view.ui.add(basemaptoggle, "top-left");      
-
 
     </script>
 
@@ -52,6 +44,7 @@
     <arcgis-map item-id="e8c7bdf86451477586d6f89ff99a51cb" popup-component-enabled>
       <arcgis-search slot="top-right"></arcgis-search>
       <arcgis-legend slot="bottom-left"></arcgis-legend>
+      <arcgis-basemap-gallery slot="top-right"></arcgis-basemap-gallery>
     </arcgis-map>
   </body>
 </html>
