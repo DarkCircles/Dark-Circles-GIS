@@ -47,7 +47,14 @@
         view="Map"
         next-basemap="topo-vector"
       ></arcgis-basemap-toggle>
-      <arcgis-layer-list slot="bottom-left"></arcgis-layer-list>
+        <arcgis-layer-list
+          slot="bottom-left"
+          view="Map"
+          selection-mode="none"
+          visibility-appearance="checkbox"
+          drag-enabled
+          collapsed
+        ></arcgis-layer-list>
     </arcgis-map>
   </body>
 </html>
