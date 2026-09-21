@@ -13,18 +13,18 @@
     }
 </style>
 	<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/themes/dark/main.css">
-<script src="https://js.arcgis.com/4.11/"></script>
+<script src="https://js.arcgis.com/4.10/"></script>
 	
 <script>
   require([
-    "esri/Map",
-    "esri/views/MapView",
+      "esri/Map",
+      "esri/views/MapView",
 	  "esri/layers/FeatureLayer",
 	  "esri/widgets/Search",
 	  "esri/widgets/LayerList",
-		"esri/widgets/Expand",
-		"esri/layers/GeoJSONLayer",
-    ], function(Map, MapView, FeatureLayer, Search, LayerList, Expand, GeoJSONLayer) {
+	  "esri/widgets/Expand",
+	  "esri/widgets/BasemapGallery",
+    ], function(Map, MapView, FeatureLayer, Search, LayerList, Expand, BasemapGallery) {
 
     var map = new Map({
       basemap: "topo-vector"
@@ -43,7 +43,7 @@
 	}
 	};
 	
-	var mde_buildings_renderer = {
+	var benbrook_buildings_renderer = {
 	type: "simple",
 	symbol: {
 		type: "simple-fill",
@@ -79,7 +79,7 @@
         type: "text",
         color: "blue",
         haloColor: "white",
-				halosize: "10px",
+		halosize: "10px",
         font: {
           size: 12,
           weight: "bold"
@@ -90,7 +90,7 @@
 		}
     };
 
-	const mde_buildings_labels = {
+	const benbrook_buildings_labels = {
       symbol: {
         type: "text",
         color: [200,200,200],
@@ -111,9 +111,9 @@
 		title: "Parcels"
 	});
 	
-	var mde_buildings = new GeoJSONLayer({
-		url: "https://www.darkcirclesgis.com/json/MDE_Building_Footprint_GeoJSON.geojson",
-		renderer: mde_buildings_renderer,
+	var benbrook_buildings = new FeatureLayer({
+		url: "https://services2.arcgis.com/47zpaxPs74cHOzU1/arcgis/rest/services/BuildingFootprints1/FeatureServer",
+		renderer: benbrook_buildings_renderer,
 		title: "Building Footprints"
 	});
 	
@@ -127,10 +127,14 @@
 		url: "https://services6.arcgis.com/6k8nooj6BuHpA9io/arcgis/rest/services/Duck_Pond/FeatureServer",
 
 	});
+	
+	//Scale buildings feature, data source has this value pre-set, this undoes that
+	benbrook_buildings.maxScale = 0;
+	benbrook_buildings.minScale = 0;
 
 	//Add to map
 	map.add(benbrook_parcels,0);
-	map.add(mde_buildings,1);
+	map.add(benbrook_buildings,1);
 	map.add(mde_areas,2);
 	map.add(mde_pond,3);
 
@@ -147,7 +151,7 @@
     coordsWidget.id = "coordsWidget";
     coordsWidget.className = "esri-widget esri-component";
     coordsWidget.style.padding = "7px 15px 5px";
-
+	
     //*** Update lat, lon, zoom and scale ***//
     function showCoordinates(pt) {
       var coords = "Lat/Lon " + pt.latitude.toFixed(3) + " " + pt.longitude.toFixed(3) + 
@@ -174,40 +178,39 @@
 			if (item.layer.type != "group") {
 				item.panel = {
 					content: "legend",
-					open: true
+					open: false
 				};
 			}
 		}
 	});
+	
+	//create search
+	var search = new Search({
+		view: view,
+	});
 
+	//Legend expand button
 	var legendexpand = new Expand({
 		view: view,
 		content: layerList,
 	});
-
-	//General Search and owner Search
-	var search = new Search({
-		view: view,
-		allPlaceholder: "Select Search",
-		sources: [{
-			layer: benbrook_parcels,
-			searchFields: ["Owner_Name"],
-			displayField: "Owner_Name",
-			exactMatch: false,
-			name: "Owner Search",
-			placeholder: "Owner Name",
-			zoom: 11,
-			outFields: ["*"]
-			}
-		]
-	});
-
-	//Widgets add to map
-	view.ui.add(legendexpand, "bottom-left");
-	view.ui.add(search,"top-right");
-	view.ui.add(coordsWidget, "bottom-right");
-
 	
+	//create basemap gallery
+	var basemapgallary = new BasemapGallery({
+		view: view
+	});
+	
+	//basemap gallary expand button
+	var basemapexpand = new Expand({
+		view: view,
+		content: basemapgallary,
+	});
+	
+	//add widgets to map
+	view.ui.add(coordsWidget, "bottom-right");
+	view.ui.add(search, "top-right");
+	view.ui.add(basemapexpand, "top-left");
+	view.ui.add(legendexpand, "bottom-left");
 });
 
 </script>
