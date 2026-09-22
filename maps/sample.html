@@ -84,15 +84,21 @@
       }
 
       // Force docked popup
-      view.on("click", () => {
-        setTimeout(() => {
-          view.popup.dockEnabled = true;
-          view.popup.dockOptions = {
-            position: "bottom-right",
-            breakpoint: false,
-            buttonEnabled: false
-          };
-        }, 0);
+      function enforcePopupDocking() {
+        view.popup.dockEnabled = true;
+        view.popup.dockOptions = {
+          position: "bottom-right",
+          breakpoint: false,
+          buttonEnabled: false
+        };
+      }
+
+      enforcePopupDocking();
+          
+      view.popup.watch("visible", (visible) => {
+        if (visible) {
+          enforcePopupDocking();
+        }
       });
 
       webmap.allLayers.forEach(layer => {
