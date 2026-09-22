@@ -27,8 +27,8 @@
       });
       identityManager.registerOAuthInfos([oAuthInfo]);
 
-
       const mapElement = document.querySelector("arcgis-map");
+
       // Wait for the map component to be ready
       await mapElement.viewOnReady();
 
@@ -41,59 +41,62 @@
 
       if (projectNumber) {
       
-      // Find your layer by its title in the web map
-      const featureLayer = webmap.allLayers.find(
-      layer => layer.title === "⏹️ Project Active in Procore"
-      );
-      
-      if (!featureLayer) {
-      console.error("Layer not found");
-      } else {
-      
-      const query = featureLayer.createQuery();
-      query.where = `project_number = '${projectNumber}'`;
-      query.returnGeometry = true;
-      query.outFields = ["*"];
-      
-      const results = await featureLayer.queryFeatures(query);
-      
-      if (results.features.length > 0) {
-      const feature = results.features[0];
-      
-      // Zoom to the feature
-      await view.goTo(feature);
+        // Find your layer by its title in the web map
+        const featureLayer = webmap.allLayers.find(
+        layer => layer.title === "⏹️ Project Active in Procore"
+        );
+        
+        if (!featureLayer) {
+        console.error("Layer not found");
+        } else {
+        
+          const query = featureLayer.createQuery();
+          query.where = `project_number = '${projectNumber}'`;
+          query.returnGeometry = true;
+          query.outFields = ["*"];
 
-      // Dock popup
-      view.popup.dockEnabled = true;
-      view.popup.dockOptions = {
-      buttonEnabled: true,
-      breakpoint: false,
-      position: "bottom-right"
-      };
-      
-      // Open popup
-      view.openPopup({
-      features: [feature]
-      });
+          const results = await featureLayer.queryFeatures(query);
 
-      // Force popup to stay docked in the bottom right
-      view.on("click", () => {
-        view.popup.dockEnabled = true;
-        view.popup.dockOptions = {
-        position: "bottom-right",
-        breakpoint: false
+          if (results.features.length > 0) {
+          const feature = results.features[0];
+          
+          // Zoom to the feature
+          await view.goTo(feature);
+
+          // Dock popup
+          view.popup.dockEnabled = true;
+          view.popup.dockOptions = {
+          buttonEnabled: true,
+          breakpoint: false,
+          position: "bottom-right"
           };
-        });
 
-      console.log(`Zoomed to project ${projectNumber}`);
-      } else {
-      console.warn(`Project not found: ${projectNumber}`);
+          // Open popup
+          view.openPopup({
+          features: [feature]
+          });
+
+          console.log(`Zoomed to project ${projectNumber}`);
+          } else {
+            console.warn(`Project not found: ${projectNumber}`);
           }
         }
       }
 
+      // Force docked popup
+      view.on("click", () => {
+        setTimeout(() => {
+          view.popup.dockEnabled = true;
+          view.popup.dockOptions = {
+            position: "bottom-right",
+            breakpoint: false,
+            buttonEnabled: false
+          };
+        }, 0);
+      });
+
       webmap.allLayers.forEach(layer => {
-      console.log(layer.title);
+        console.log(layer.title);
       });
 
       console.log(mapElement.popup);
