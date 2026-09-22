@@ -70,7 +70,6 @@
       breakpoint: false,
       position: "bottom-right"
       };
-      popupComponent.alignment = "bottom-right";
       
       // Open popup
       view.openPopup({
@@ -87,6 +86,8 @@
       webmap.allLayers.forEach(layer => {
       console.log(layer.title);
       });
+
+      console.log(mapElement.popup);
 
     </script>
 
