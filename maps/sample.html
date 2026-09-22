@@ -64,21 +64,21 @@
       await view.goTo(feature);
       
       // Open popup
-      view.popup.open({
+      view.openPopup({
       features: [feature]
       });
 
       console.log(`Zoomed to project ${projectNumber}`);
       } else {
       console.warn(`Project not found: ${projectNumber}`);
-      }
-      }
+          }
+        }
       }
 
       webmap.allLayers.forEach(layer => {
       console.log(layer.title);
       });
-      
+
     </script>
 
     <style>
