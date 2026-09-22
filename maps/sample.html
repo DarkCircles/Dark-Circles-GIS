@@ -76,6 +76,15 @@
       features: [feature]
       });
 
+      // Force popup to stay docked in the bottom right
+      view.on("click", () => {
+        view.popup.dockEnabled = true;
+        view.popup.dockOptions = {
+        position: "bottom-right",
+        breakpoint: false
+          };
+        });
+
       console.log(`Zoomed to project ${projectNumber}`);
       } else {
       console.warn(`Project not found: ${projectNumber}`);
