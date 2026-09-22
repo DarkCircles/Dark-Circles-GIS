@@ -27,6 +27,58 @@
       });
       identityManager.registerOAuthInfos([oAuthInfo]);
 
+
+      const mapElement = document.querySelector("arcgis-map");
+      // Wait for the map component to be ready
+      await mapElement.viewOnReady();
+
+      const view = mapElement.view;
+      const webmap = view.map;
+
+      // Get project_number from URL
+      const params = new URLSearchParams(window.location.search);
+      const projectNumber = params.get("project_number");
+
+      if (projectNumber) {
+      
+      // Find your layer by its title in the web map
+      const featureLayer = webmap.allLayers.find(
+      layer => layer.title === "⏹️ Project Active in Procore"
+      );
+      
+      if (!featureLayer) {
+      console.error("Layer not found");
+      } else {
+      
+      const query = featureLayer.createQuery();
+      query.where = `project_number = '${projectNumber}'`;
+      query.returnGeometry = true;
+      query.outFields = ["*"];
+      
+      const results = await featureLayer.queryFeatures(query);
+      
+      if (results.features.length > 0) {
+      const feature = results.features[0];
+      
+      // Zoom to the feature
+      await view.goTo(feature);
+      
+      // Open popup
+      view.popup.open({
+      features: [feature]
+      });
+
+      console.log(`Zoomed to project ${projectNumber}`);
+      } else {
+      console.warn(`Project not found: ${projectNumber}`);
+      }
+      }
+      }
+
+      webmap.allLayers.forEach(layer => {
+      console.log(layer.title);
+      });
+      `
     </script>
 
     <style>
