@@ -62,6 +62,9 @@
       
       // Zoom to the feature
       await view.goTo(feature);
+
+      // Dock popup
+      view.popup.dockEnabled = true;
       
       // Open popup
       view.openPopup({
